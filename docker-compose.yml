@@ -8,7 +8,7 @@ services:
     ports:
       - "3000:3000"
     image: epam/ai-dial-chat:development
-#    platform: linux/amd64
+    platform: linux/amd64
     depends_on:
       - themes
       - core
@@ -86,6 +86,7 @@ services:
       - redis
       - userservice
     image: khshanovskyi/ums-mcp-server:latest
+    platform: linux/amd64
     ports:
       - "8041:8005"
     environment:

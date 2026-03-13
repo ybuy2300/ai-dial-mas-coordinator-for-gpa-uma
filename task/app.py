@@ -19,18 +19,44 @@ logger = get_logger(__name__)
 class MASCoordinatorApplication(ChatCompletion):
 
     async def chat_completion(self, request: Request, response: Response) -> None:
-        #TODO:
         # 1. Create single choice with context manager
         # 2. Create MASCoordinator and handle request
-        raise NotImplementedError()
+
+        try:
+            with response.create_single_choice() as choice:
+
+                await MASCoordinator(
+                    endpoint=DIAL_ENDPOINT,
+                    deployment_name=DEPLOYMENT_NAME,
+                    ums_agent_endpoint=UMS_AGENT_ENDPOINT
+                ).handle_request(
+                    choice=choice,
+                    request=request,
+                )
+
+                logger.info("Successfully completed chat request")
+
+        except Exception as e:
+            logger.error(
+                f"Error processing chat completion: {str(e)}",
+                exc_info=True
+            )
+            raise
 
 
 
-#TODO:
 # 1. Create DIALApp
 # 2. Create MASCoordinatorApplication
 # 3. Add to created DIALApp chat_completion with:
 #       - deployment_name="mas-coordinator"
 #       - impl=agent_app
 # 4. Run it with uvicorn: `uvicorn.run({CREATED_DIAL_APP}, port=8055, host="0.0.0.0")`
+logger.info("Creating DIAL application")
+app: DIALApp = DIALApp()
+agent_app = MASCoordinatorApplication()
+app.add_chat_completion(deployment_name="mas-coordinator", impl=agent_app)
+logger.info("DIAL application initialized successfully")
 
+if __name__ == "__main__":
+    logger.info("Starting DIAL application with Uvicorn")
+    uvicorn.run(app, port=8055, host="0.0.0.0")   
